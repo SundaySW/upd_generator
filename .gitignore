@@ -1,0 +1,7 @@
+.idea
+__pycache__
+/other_data/
+/result/
+/source/
+/source_json/
+/venv/
