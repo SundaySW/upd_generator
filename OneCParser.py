@@ -24,8 +24,8 @@ class OneCParser:
         with open(DOC_INFO_FILE_NAME, 'r', encoding="utf-8") as file:
             static_file_data = json.loads(file.read())
         dynamic_data = {"ВремИнфПр": datetime.datetime.now().strftime("%H.%M.%S"),
-                       "ДатаИнфПр": datetime.datetime.now().strftime("%d.%m.%Y"),
-                       "НаимЭконСубСост": self.get_seller_full_naming()}
+                        "ДатаИнфПр": datetime.datetime.now().strftime("%d.%m.%Y"),
+                        "НаимЭконСубСост": self.get_seller_full_naming()}
 
         return dynamic_data | static_file_data
 
@@ -62,15 +62,21 @@ class OneCParser:
 
         seller = {"НаимОрг": doc[0]["Наименование"],
                   "ФактическийАдрес": AddrData(doc[0]["Адрес"].split(",")).get_data(),
-                  "ЮридическийАдрес": AddrData(doc[0]["ЮридическийАдрес"].split(",")).get_data(),
-                  "ИНН": doc[0]["ИННЮЛ"],
-                  "КПП": doc[0]["КПП"]}
+                  "ЮридическийАдрес": AddrData(doc[0]["ЮридическийАдрес"].split(",")).get_data()
+                  # ,"ИНН": doc[0]["ИННЮЛ"]
+                  # ,"КПП": doc[0]["КПП"]
+                    , "ИНН": ""
+                    , "КПП": ""
+                  }
 
         buyer = {"НаимОрг": doc[1]["Наименование"],
                  "ФактическийАдрес": AddrData(doc[1]["Адрес"].split(",")).get_data(),
-                 "ЮридическийАдрес": AddrData(doc[1]["ЮридическийАдрес"].split(",")).get_data(),
-                 "ИНН": doc[1]["ИННЮЛ"],
-                 "КПП": doc[1]["КПП"]}
+                 "ЮридическийАдрес": AddrData(doc[1]["ЮридическийАдрес"].split(",")).get_data()
+                 # ,"ИНН": doc[1]["ИННЮЛ"]
+                 # ,"КПП": doc[1]["КПП"]
+                , "ИНН": ""
+                , "КПП": ""
+                 }
 
         retval = {
             "СчетФ": invoice_data,

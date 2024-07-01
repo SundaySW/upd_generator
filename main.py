@@ -23,6 +23,21 @@ def parse_json_file(file_name) -> dict:
     return json.loads(file_data)
 
 
+def fill_up_inn_kpp_external(one_c_data):
+    with open("static_data/inn_kpp.json", 'r', encoding="utf-8") as edo_file:
+        inn_data = json.loads(edo_file.read())
+
+        seller = one_c_data["СчФакт"]["Продавец"]
+        buyer = one_c_data["СчФакт"]["Покупатель"]
+        seller_new_data = inn_data[seller["НаимОрг"]]
+        buyer_new_data = inn_data[buyer["НаимОрг"]]
+
+        seller["ИНН"] = seller_new_data["ИНН"]
+        seller["КПП"] = seller_new_data["КПП"]
+        buyer["ИНН"] = buyer_new_data["ИНН"]
+        buyer["КПП"] = buyer_new_data["КПП"]
+
+
 def assemble_json_file(one_c_file_name):
     invoice_file_name = decode_file_to_utf8(one_c_file_name)
     with open(invoice_file_name, 'r', encoding="utf-8") as invoice_file:
@@ -31,6 +46,9 @@ def assemble_json_file(one_c_file_name):
     edo = prepare_edo_info("static_data/edo_info.xml", one_c_data["СчФакт"]["Покупатель"]["НаимОрг"])
     json_file_name = os.path.join(os.path.curdir, SOURCE_JSON_DIR,
                                   os.path.basename(one_c_file_name).replace("xml", "json"))
+
+    fill_up_inn_kpp_external(one_c_data)
+
     with open(json_file_name, 'w', encoding="utf-8") as json_file:
         json.dump(one_c_data | signatory | edo, json_file, indent=4, ensure_ascii=False)
     return json_file_name

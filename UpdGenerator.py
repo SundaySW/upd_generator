@@ -11,10 +11,10 @@ class ProductTable:
     def __init__(self, data):
         self.main_tag = "ТаблСчФакт"
         self.table_data = data
+        self.soup = BeautifulSoup(features="xml")
 
     def makeTag(self):
-        soup = BeautifulSoup(features="xml")
-        table_tag = soup.new_tag(name=self.main_tag)
+        table_tag = self.soup.new_tag(name=self.main_tag)
         total_no_vat = 0
         total_sum = 0
         total_tax = 0
@@ -26,39 +26,38 @@ class ProductTable:
             total_sum += elem["sums"]["total_sum"]
             total_tax += elem["sums"]["tax_sum"]
 
-        total_tag = soup.new_tag(name="ВсегоОпл")
+        total_tag = self.soup.new_tag(name="ВсегоОпл")
         total_tag.attrs = {
             "СтТовБезНДСВсего": f"{total_no_vat:.2f}",
             "СтТовУчНалВсего": f"{total_sum:.2f}"
         }
-        total_tag_vat_sum = soup.new_tag(name="СумНал")
+        total_tag_vat_sum = self.soup.new_tag(name="СумНал")
         total_tag_vat_sum.string = f"{total_tax:.2f}"
-        total_tag_inside_vat = soup.new_tag(name="СумНалВсего")
+        total_tag_inside_vat = self.soup.new_tag(name="СумНалВсего")
         total_tag_inside_vat.append(total_tag_vat_sum)
         total_tag.append(total_tag_inside_vat)
         table_tag.append(total_tag)
         return table_tag
 
     def makeProductTag(self, product, count):
-        soup = BeautifulSoup(features="xml")
         product["СведТов"]["НомСтр"] = str(count)
-        main_tag = soup.new_tag(name="СведТов", attrs=product["СведТов"])
+        main_tag = self.soup.new_tag(name="СведТов", attrs=product["СведТов"])
 
-        excise_tag = soup.new_tag(name="Акциз")
+        excise_tag = self.soup.new_tag(name="Акциз")
         for key, value in product["Акциз"].items():
-            excise_inside_tag = soup.new_tag(name=key)
+            excise_inside_tag = self.soup.new_tag(name=key)
             excise_inside_tag.insert(0, NavigableString(value))
             excise_tag.append(excise_inside_tag)
             main_tag.append(excise_tag)
 
-        tax_sum_tag = soup.new_tag(name="СумНал")
+        tax_sum_tag = self.soup.new_tag(name="СумНал")
         tax_sum_data = product["СумНал"]["СумНал"]
         tax_sum_tag_inside = copy(tax_sum_tag)
         tax_sum_tag_inside.string = str(tax_sum_data)
         tax_sum_tag.append(tax_sum_tag_inside)
         main_tag.append(tax_sum_tag)
 
-        additional_information_tag = soup.new_tag(name="ДопСведТов")
+        additional_information_tag = self.soup.new_tag(name="ДопСведТов")
         additional_information_data = product["ДопСведТов"]
         additional_information_tag["НаимЕдИзм"] = additional_information_data["НаимЕдИзм"]
         additional_information_tag["КодТов"] = additional_information_data["КодТов"]
@@ -71,7 +70,7 @@ class UpdGenerator:
     def __init__(self, json_data, file_name):
         self.file_name = os.path.basename(file_name)
         self.json_data = json_data
-        self.docc = BeautifulSoup(features="xml")
+        self.soup = BeautifulSoup(features="xml")
 
     def generate_doc(self):
         main_file_tag = FileInfo("snd_upd_gen 1.0", "5.01").makeTag()
@@ -89,9 +88,9 @@ class UpdGenerator:
         doc_tag.append(signatory_tag)
         main_file_tag.append(doc_tag)
 
-        self.docc.append(main_file_tag)
+        self.soup.append(main_file_tag)
         with open(os.path.join(os.path.curdir, RESULT_FOLDER_NAME, self.file_name), 'w', encoding="utf-8") as fd:
-            fd.write(str(self.docc))
+            fd.write(str(self.soup))
 
 
 class FileInfo:
@@ -307,6 +306,7 @@ class Signatory:
             self.tagName = "ЮЛ"
             self.main_tag_attr = {"Должн": data["ЮЛ"]["Должн"],
                                   "ИННЮЛ": data["ЮЛ"]["ИННЮЛ"],
+                                  "НаимОрг": data["ЮЛ"]["НаимОрг"],
                                   }
             self.full_name = self.FullName(data["ФИО"])
 
@@ -353,8 +353,7 @@ class Product:
                             "СтТовБезНДС": f"{self.sum:.2f}",
                             "НалСт": self.tax_percent,
                             "СтТовУчНал": f"{self.total_sum:.2f}",
-                            "НаимЕдИзм": self.unit,
-                            "КодТов": self.product_id},
+                            },
                 "СумНал": {"СумНал": self.tax_sum},
                 "Акциз": {"БезАкциз": "без акциза"},
                 "ДопСведТов": {"НаимЕдИзм": self.unit,
